@@ -20,13 +20,13 @@ import { useState, useRef, useEffect } from "react";
 // import AuthenticationError from "../callbacks/AuthenticationError";
 // import SessionLost from "../callbacks/SessionLost";
 // import UserInfo from "../UserInfo";
-import { PdfControls, PdfPreview } from "../components/PdfPreview";
-import { apiPrefix } from "../configuration";
+import {apiPrefix} from "../configuration";
+import {PdfControls, PdfPreview} from "../components/PdfPreview";
 import {
   UserPageSelectionSet,
   addPageToSet,
-  removePageFromSet,
   setContainsPage,
+  removePageFromSet,
 } from "../PageSelectionSet";
 import "./Home.tsx.css";
 
@@ -43,12 +43,8 @@ const Home = () => {
   // const { idToken, idTokenPayload } = useOidcIdToken()  // this is how you get the users id token
   // const { login, logout, isAuthenticated } = useOidc()  // this gets the functions to login and logout and the logout state
 
-  const { fetch } = useOidcFetch();
+  const {fetch} = useOidcFetch();
   const [message, setMessage] = useState<SuccessReply | null>(null);
-  const [copies, setCopies] = useState(1);
-
-  const [pdfWidth, setPdfWidth] = useState(60);
-  const splitterRef = useRef<HTMLDivElement | null>(null);
 
   const [printers, setPrinters] = useState<string[]>([]);
   const [printer, setPrinter] = useState("");
@@ -73,6 +69,7 @@ const Home = () => {
     formData.delete("file");
     formData.append("title", pdfControls.current?.documentTitle ?? file!!.name);
     console.log(file);
+
     fetch(
       `${apiPrefix}/printers/${encodeURIComponent(printer)}/print?${new URLSearchParams(formData as any)}`,
       {
@@ -128,41 +125,15 @@ const Home = () => {
         const newSetText = included
           ? addPageToSet(set.text, page)
           : removePageFromSet(set.text, page, pdfPageCount);
-        return { text: newSetText, validSet: newSetText };
+        return {text: newSetText, validSet: newSetText};
       });
     },
   );
 
-  //IDK I was bored. Allows user to resize pdfviewer and form pane
-
-  const startResizing = (event: React.MouseEvent) => {
-    event.preventDefault();
-
-    const handleMouseMove = (event: MouseEvent) => {
-      if (!splitterRef.current) return;
-
-      const rect = splitterRef.current.getBoundingClientRect();
-
-      const newWidth = ((event.clientX - rect.left) / rect.width) * 100;
-
-      const clampedWidth = Math.min(Math.max(newWidth, 30), 80);
-
-      setPdfWidth(clampedWidth);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
   return (
-    <div className="pane-splitter" ref={splitterRef}>
-      <div className="pdf-pane" style={{ width: `${pdfWidth}%` }}>
-        {file ? (
+    <div className="pane-splitter">
+      <div className="pdf-pane">
+        {file && (
           <PdfPreview
             pdfBlob={file}
             pdfControls={pdfControls.current}
@@ -170,19 +141,9 @@ const Home = () => {
             pagesIncluded={pagesIncluded}
             setPageIncluded={setPageIncluded}
           />
-        ) : (
-          <div className="pdf-empty">
-            <span className="material-icons pdf-empty-icon">description</span>
-
-            <h5>No file selected</h5>
-            <p>Select a file to see a preview before printing.</p>
-          </div>
         )}
       </div>
-
-      <div className="pane-resizer" onMouseDown={startResizing} />
-
-      <div className="form-pane" style={{ width: `${100 - pdfWidth}%` }}>
+      <div className="form-pane">
         {message && (
           <Alert>
             {message.message}{" "}
@@ -219,70 +180,43 @@ const Home = () => {
             />
             <FormText>Document you'd like to print. (Max File Size: 25 MB)</FormText>
           </FormGroup>
-          <FormGroup className="input-container">
-            <Label for="sides" className="input-label">
-              Sides
-            </Label>
-            <Input id="sides" name="sides" type="select" className="input">
+          <FormGroup>
+            <Label for="sides">Double-Sided</Label>
+            <Input id="sides" name="sides" type="select">
               <option value="one-sided">Single Sided</option>
               <option value="two-sided-long-edge">
-                Long Edge Double Sided
+                Double Sided (Long Edge)
               </option>
               <option value="two-sided-short-edge">
-                Short Edge Double Sided
+                Double Sided (Short Edge)
               </option>
             </Input>
           </FormGroup>
-          <FormGroup className="input-container">
-            <Label for="colorMode" className="input-label">
-              Color Mode
-            </Label>
+          <FormGroup>
+            <Label for="colorMode">Color Mode</Label>
             <Input
               id="colorMode"
               name="colorMode"
               type="select"
               value={colorMode}
               onChange={onColorChange}
-              className="input"
             >
               <option value="color">Color</option>
-              <option value="grayscale">Black + White</option>
+              <option value="grayscale">Grayscale</option>
             </Input>
           </FormGroup>
-          <FormGroup className="input-container">
-            <Label for="copies" className="input-label">
-              Copies
-            </Label>
-
-            <div className="number-input input">
-              <Input
-                id="copies"
-                name="copies"
-                type="number"
-                value={copies}
-                min={1}
-                onChange={(e) => setCopies(Number(e.target.value))}
-                className="input"
-              />
-
-              <div className="number-controls">
-                <button type="button" onClick={() => setCopies((c) => c + 1)}>
-                  <span className="material-icons">keyboard_arrow_up</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCopies((c) => Math.max(1, c - 1))}
-                >
-                  <span className="material-icons">keyboard_arrow_down</span>
-                </button>
-              </div>
-            </div>
+          <FormGroup>
+            <Label for="copies">Copies</Label>
+            <Input
+              id="copies"
+              name="copies"
+              type="number"
+              defaultValue={1}
+              min={1}
+            />
           </FormGroup>
-          <FormGroup className="input-container">
-            <Label for="pages" className="input-label">
-              Page Range
-            </Label>
+          <FormGroup>
+            <Label for="pages">Page Range</Label>
             <Input
               id="pages"
               name="pages"
@@ -291,13 +225,10 @@ const Home = () => {
               invalid={pagesIncluded.text != pagesIncluded.validSet}
               onChange={onPagesIncludedChanged}
               placeholder="e.g. 1-5, 8, 11-13"
-              className="input"
             />
           </FormGroup>
 
-          <Button type="submit" color="primary" className="w-100">
-            Print
-          </Button>
+          <Button type="submit">Print</Button>
         </Form>
       </div>
     </div>

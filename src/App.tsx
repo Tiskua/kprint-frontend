@@ -1,16 +1,14 @@
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
-// @ts-expect-error The package exposes CSS without TypeScript declarations.
-import "csh-material-bootstrap/css";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
-import PageContainer from "./containers/PageContainer";
+import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 import Home from "./pages/Home";
+import PageContainer from "./containers/PageContainer";
+import "csh-material-bootstrap/dist/csh-material-bootstrap.css";
 import NotFound from "./pages/NotFound";
 
 type Props = {
   rerouteHomeOn404?: boolean;
 };
 
-export default function App({ rerouteHomeOn404 = undefined }: Props) {
+export default function App({rerouteHomeOn404 = undefined}: Props) {
   return (
     <Router>
       <PageContainer>
